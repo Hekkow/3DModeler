@@ -18,8 +18,10 @@ public:
 
 	int width;
 	int height;
-	bool firstClick = true;
-	float speed = 0.005f;
+	bool firstClickRight = true;
+	bool holdingDownRight = false;
+	bool firstClickMiddle = true;
+	float speed = 0.002f;
 	float sensitivity = 70;
 	Camera(int width, int height, glm::vec3 position);
 	void Matrix(float FOVdeg, float nearPlane, float farPlane, Shader& shader, const char* uniform);

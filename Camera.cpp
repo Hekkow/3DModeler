@@ -44,11 +44,12 @@ void Camera::Inputs(GLFWwindow* window)
 
 	Position += velocity * speed;
 	if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS) {
+		holdingDownRight = true;
 		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
 
-		if (firstClick) {
+		if (firstClickRight) {
 			glfwSetCursorPos(window, (width / 2), (height / 2));
-			firstClick = false;
+			firstClickRight = false;
 		}
 
 		double mouseX;
@@ -64,22 +65,11 @@ void Camera::Inputs(GLFWwindow* window)
 		glfwSetCursorPos(window, (width / 2), (height / 2));
 	}
 	else if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_RELEASE) {
-		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-		firstClick = true;
-	}
-	/*if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_MIDDLE) == GLFW_PRESS) {
-		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
-
-		if (firstClick) {
-			glfwSetCursorPos(window, (width / 2), (height / 2));
-			firstClick = false;
+		if (holdingDownRight) {
+			glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+			firstClickRight = true;
+			holdingDownRight = false;
 		}
-
-		double mouseX;
-		double mouseY;
-		glfwGetCursorPos(window, &mouseX, &mouseY);
-		std::cout << mouseX << ", " << mouseY << std::endl;
-		glfwSetCursorPos(window, (width / 2), (height / 2));
-	}*/
+	}
 
 }

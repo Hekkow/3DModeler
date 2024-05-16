@@ -1,1 +1,11 @@
-﻿  3DModeler.vcxproj -> C:\!Mine\Code\3DModeler\x64\Debug\3DModeler.exe
+﻿  Main.cpp
+C:\!Mine\Code\3DModeler\Main.cpp(73,53): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
+C:\!Mine\Code\3DModeler\Main.cpp(73,40): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
+C:\!Mine\Code\3DModeler\Main.cpp(82,32): warning C4244: 'argument': conversion from 'float' to 'GLsizei', possible loss of data
+C:\!Mine\Code\3DModeler\Main.cpp(82,19): warning C4244: 'argument': conversion from 'float' to 'GLsizei', possible loss of data
+C:\!Mine\Code\3DModeler\Main.cpp(99,29): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
+C:\!Mine\Code\3DModeler\Main.cpp(99,16): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
+C:\!Mine\Code\3DModeler\Main.cpp(122,44): warning C4267: 'argument': conversion from 'size_t' to 'GLsizei', possible loss of data
+C:\!Mine\Code\3DModeler\Main.cpp(168,35): warning C4244: 'argument': conversion from 'double' to 'GLint', possible loss of data
+C:\!Mine\Code\3DModeler\Main.cpp(168,16): warning C4244: 'argument': conversion from 'double' to 'GLint', possible loss of data
+  3DModeler.vcxproj -> C:\!Mine\Code\3DModeler\x64\Debug\3DModeler.exe
