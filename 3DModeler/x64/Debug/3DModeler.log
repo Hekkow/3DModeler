@@ -1,3 +1,9 @@
-﻿  glad.c
-  Main.cpp
+﻿  Main.cpp
+C:\!Mine\Code\3DModeler\Main.cpp(85,44): warning C4267: 'argument': conversion from 'size_t' to 'GLsizei', possible loss of data
+C:\!Mine\Code\3DModeler\Main.cpp(105,48): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+C:\!Mine\Code\3DModeler\Main.cpp(105,42): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+C:\!Mine\Code\3DModeler\Main.cpp(106,23): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+C:\!Mine\Code\3DModeler\Main.cpp(106,17): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+C:\!Mine\Code\3DModeler\Main.cpp(107,60): warning C4267: 'argument': conversion from 'size_t' to 'GLint', possible loss of data
+C:\!Mine\Code\3DModeler\Main.cpp(141,13): warning C4244: 'return': conversion from 'double' to 'float', possible loss of data
   3DModeler.vcxproj -> C:\!Mine\Code\3DModeler\x64\Debug\3DModeler.exe
