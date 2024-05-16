@@ -3,32 +3,44 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <vector>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+#include <stb/stb_image.h>
 
 #include "shaderClass.h"
 #include "VBO.h"
 #include "VAO.h"
 #include "EBO.h"
-int windowWidth = 800;
-int windowHeight = 800;
+#include "Camera.h"
+#include "Texture.h"
+float windowWidth = 800;
+float windowHeight = 800;
 const char* windowName = "3D Modeler";
 
+int verticesRowAmount = 5;
 
-// vertices, each group of 3 is an x, y, and z
+// vertices, first three are vertex coordinates then last two are texture coordinates
 std::vector<GLfloat> vertices =
-{ //               COORDINATES                  /     COLORS           //
-	-0.5f, -0.5f * float(sqrt(3)) * 1 / 3, 0.0f,
-	 0.5f, -0.5f * float(sqrt(3)) * 1 / 3, 0.0f,
-	 0.0f,  0.5f * float(sqrt(3)) * 2 / 3, 0.0f,
-	 //-0.5f,  0.5f * float(sqrt(3)) * 2 / 3, 0.0f,
-	//-0.5f, -0.5f * float(sqrt(3)) * 1 / 3, 0.0f,     0.8f, 0.3f,  0.02f, // Lower left corner
-	// 0.5f, -0.5f * float(sqrt(3)) * 1 / 3, 0.0f,     0.8f, 0.3f,  0.02f, // Lower right corner
-	// 0.0f,  0.5f * float(sqrt(3)) * 2 / 3, 0.0f,     1.0f, 0.6f,  0.32f, // Upper corner
-	//-0.25f, 0.5f * float(sqrt(3)) * 1 / 6, 0.0f,     0.9f, 0.45f, 0.17f, // Inner left
-	// 0.25f, 0.5f * float(sqrt(3)) * 1 / 6, 0.0f,     0.9f, 0.45f, 0.17f, // Inner right
-	// 0.0f, -0.5f * float(sqrt(3)) * 1 / 3, 0.0f,     0.8f, 0.3f,  0.02f  // Inner down
+{
+	-0.5f, -0.5f, 0, 0, 0, // back left down
+	-0.5f, 0.5f, 0, 0, 1, // back left up
+	0.5f, 0.5f, 0, 1, 1, // back right up
+	0.5f, -0.5f, 0, 1, 0, // back right down
+	-0.5f, -0.5f, 1, 1, 0, // front left down
+	-0.5f, 0.5f, 1, 1, 1, // front left up
+	0.5f, 0.5f, 1, 0, 1, // front right up
+	0.5f, -0.5f, 1, 0, 0, // front right down
 };
 std::vector<GLuint> indices = {
-	0, 1, 2
+	0, 2, 1,
+	0, 3, 2,
+	4, 6, 5,
+	4, 6, 7,
+	7, 6, 3,
+	6, 2, 3,
+	4, 5, 0,
+	0, 1, 5
 };
 VBO VBO1;
 EBO EBO1;
@@ -68,18 +80,26 @@ int main()
 	VBO1 = VBO(&vertices[0], vertices.size() * sizeof(vertices));
 
 	EBO1 = EBO(&indices[0], indices.size() * sizeof(indices));
-	VAO1.LinkAttrib(VBO1, 0, 3, GL_FLOAT, 3 * sizeof(float), (void*)0);
-	//VAO1.LinkAttrib(VBO1, 1, 3, GL_FLOAT, 6 * sizeof(float), (void*)(3 * sizeof(float)));
+	VAO1.LinkAttrib(VBO1, 0, 3, GL_FLOAT, verticesRowAmount * sizeof(float), (void*)0);
+	VAO1.LinkAttrib(VBO1, 1, 2, GL_FLOAT, verticesRowAmount * sizeof(float), (void*)(3 * sizeof(float)));
 	VAO1.Unbind();
 	VBO1.Unbind();
 	EBO1.Unbind();
-	//GLuint uniID = glGetUniformLocation(shaderProgram.ID, "scale");
+	
+	Texture popCat("popcat.jpg", GL_TEXTURE_2D, GL_TEXTURE0, GL_RGB, GL_UNSIGNED_BYTE);
+	popCat.texUnit(shaderProgram, "tex0", 0);
+
 	glfwSetMouseButtonCallback(window, mouse_button_callback);
+	glEnable(GL_DEPTH_TEST);
+	Camera camera(windowWidth, windowHeight, glm::vec3(0, 0, 2));
 	while (!glfwWindowShouldClose(window)) {
 		// every frame sets the background color, sets shaders, sets shapes and draws them to buffer, then displays them
 		glClearColor(0.07f, 0.13f, 0.17f, 1);
-		glClear(GL_COLOR_BUFFER_BIT);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		shaderProgram.Activate();
+		popCat.Bind();
+		camera.Inputs(window);
+		camera.Matrix(45, 0.1f, 100, shaderProgram, "camMatrix");
 		//glUniform1f(uniID, 0.5f);
 		VAO1.Bind();
 		glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
@@ -91,6 +111,7 @@ int main()
 	VAO1.Delete();
 	VBO1.Delete();
 	EBO1.Delete();
+	popCat.Delete();
 	shaderProgram.Delete();
 	glfwDestroyWindow(window);
 	glfwTerminate();
