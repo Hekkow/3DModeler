@@ -15,7 +15,8 @@ public:
 	glm::vec3 Position;
 	glm::vec3 Orientation = glm::vec3(0, 0, -1);
 	glm::vec3 Up = glm::vec3(0, 1, 0);
-
+	glm::mat4 view = glm::mat4(1);
+	glm::mat4 projection = glm::mat4(1);
 	int width;
 	int height;
 	bool firstClickRight = true;
@@ -23,6 +24,7 @@ public:
 	bool firstClickMiddle = true;
 	float speed = 0.002f;
 	float sensitivity = 70;
+	Camera();
 	Camera(int width, int height, glm::vec3 position);
 	void Matrix(float FOVdeg, float nearPlane, float farPlane, Shader& shader, const char* uniform);
 	void Inputs(GLFWwindow* window);
