@@ -52,10 +52,25 @@ VAO VAO1;
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
 void cursor_position_callback(GLFWwindow* window, double xpos, double ypos);
 Camera camera;
-std::vector<int> highlighted;
+class Edge{
+public:
+	int index1;
+	int index2;
+	Edge(int i1, int i2) { 
+		index1 = i1;
+		index2 = i2;
+	}
+	bool operator==(Edge edge) {
+		return (edge.index1 == index1 && edge.index2 == index2) || (edge.index1 == index2 && edge.index2 == index1);
+	}
+};
+std::vector<int> highlightedFaces;
+std::vector<Edge> highlightedEdges;
+std::vector<GLuint> edgeIndices;
 bool moving = false;
 double lastX = 0.0, lastY = 0.0;
 bool firstMouse = true;
+
 void Binds() {
 	VAO1.Init();
 	VAO1.Bind();
@@ -77,7 +92,6 @@ int main()
 {
 	glfwInit();
 	
-	// these hints connect glfw to opengl
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE); 
@@ -104,7 +118,8 @@ int main()
 	camera = Camera(windowWidth, windowHeight, glm::vec3(0, 0, 10));
 	glfwSetMouseButtonCallback(window, mouse_button_callback);
 	glfwSetCursorPosCallback(window, cursor_position_callback);
-
+	GLuint linesEBO;
+	glGenBuffers(1, &linesEBO);
 	while (!glfwWindowShouldClose(window)) {
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		glClearColor(0.07f, 0.13f, 0.17f, 1);
@@ -117,11 +132,22 @@ int main()
 		camera.Matrix(45, 0.1f, 100, shaderProgram, "camMatrix");
 
 		VAO1.Bind();
+		EBO1.Bind();
+		glUniform1i(glGetUniformLocation(shaderProgram.ID, "isEdge"), false);
 		for (int i = 0; i < indices.size(); i++) {
-			if (find(highlighted, i) != -1) glUniform1i(glGetUniformLocation(shaderProgram.ID, "highlighted"), true);
+			if (find(highlightedFaces, i) != -1) glUniform1i(glGetUniformLocation(shaderProgram.ID, "highlighted"), true);
 			else glUniform1i(glGetUniformLocation(shaderProgram.ID, "highlighted"), false);
 			glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, (void*)(i * 3 * sizeof(GLuint)));
 		}
+		glClear(GL_DEPTH_BUFFER_BIT);
+		glLineWidth(5);
+		glUniform1i(glGetUniformLocation(shaderProgram.ID, "highlighted"), false);
+		glUniform1i(glGetUniformLocation(shaderProgram.ID, "isEdge"), true);
+		
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, linesEBO);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, edgeIndices.size() * sizeof(GLuint), edgeIndices.data(), GL_STATIC_DRAW);
+		glDrawElements(GL_LINES, edgeIndices.size(), GL_UNSIGNED_INT, 0);
+
 		glfwSwapBuffers(window);
 		glfwPollEvents();
 	}
@@ -130,11 +156,30 @@ int main()
 	VAO1.Delete();
 	VBO1.Delete();
 	EBO1.Delete();
+	glDeleteBuffers(1, &linesEBO);
 	popCat.Delete();
 	shaderProgram.Delete();
 	glfwDestroyWindow(window);
 	glfwTerminate();
 	return 0;
+}
+void updateEdges() {
+	edgeIndices.clear();
+	for (int i = 0; i < indices.size(); i += 3) {
+		if (std::find(highlightedEdges.begin(), highlightedEdges.end(), Edge(indices[i], indices[i + 1])) != highlightedEdges.end()) {
+			edgeIndices.push_back(indices[i]);
+			edgeIndices.push_back(indices[i + 1]);
+		}
+		if (std::find(highlightedEdges.begin(), highlightedEdges.end(), Edge(indices[i + 1], indices[i + 2])) != highlightedEdges.end()) {
+			edgeIndices.push_back(indices[i + 1]);
+			edgeIndices.push_back(indices[i + 2]);
+		}
+		if (std::find(highlightedEdges.begin(), highlightedEdges.end(), Edge(indices[i + 2], indices[i])) != highlightedEdges.end()) {
+			edgeIndices.push_back(indices[i + 2]);
+			edgeIndices.push_back(indices[i]);
+		}
+	}
+
 }
 bool isTriangleClicked(const glm::vec3& rayOrigin, const glm::vec3& rayDirection, const glm::vec3& vertex0, const glm::vec3& vertex1, const glm::vec3& vertex2, float& intersectionDistance) {
     glm::vec3 edge1, edge2, h, s, q;
@@ -160,7 +205,17 @@ bool isTriangleClicked(const glm::vec3& rayOrigin, const glm::vec3& rayDirection
     intersectionDistance = inverseDeterminant * glm::dot(edge2, q);
     return intersectionDistance > small;
 }
+float pointToEdgeDistance(const glm::vec3& point, const glm::vec3& edgeStart, const glm::vec3& edgeEnd) {
+	glm::vec3 edge = edgeEnd - edgeStart;
+	glm::vec3 pointToStart = point - edgeStart;
+	float edgeLength = glm::length(edge);
+	glm::vec3 edgeDirection = glm::normalize(edge);
+	float projectionLength = glm::dot(pointToStart, edgeDirection);
 
+	if (projectionLength < 0) return glm::length(pointToStart);
+	else if (projectionLength > edgeLength) return glm::length(point - edgeEnd);
+	else return glm::length(pointToStart - edgeDirection * projectionLength);
+}
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods) {
 	if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
 		double xpos, ypos;
@@ -175,8 +230,9 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 
 		float closestIntersection = std::numeric_limits<float>::max();
 		int closestFaceIndex = -1;
+		glm::vec3 intersectionPoint;
 
-		for (size_t i = 0; i < indices.size(); i += 3) {
+		for (int i = 0; i < indices.size(); i += 3) {
 			glm::vec3 vectors[3];
 			for (int j = 0; j < 3; ++j) {
 				for (int k = 0; k < 3; ++k) {
@@ -188,13 +244,38 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 				if (t < closestIntersection) {
 					closestIntersection = t;
 					closestFaceIndex = i / 3;
+					intersectionPoint = rayOrigin + rayWorld * t;
 				}
 			}
 		}
-		int index = find(highlighted, closestFaceIndex);
-		if (index != -1) highlighted.erase(highlighted.begin() + index);
-		else if (closestFaceIndex != -1) highlighted.push_back(closestFaceIndex);
-		else highlighted.clear();
+		if (closestFaceIndex != -1) {
+			glm::vec3 vectors[3];
+			for (int j = 0; j < 3; ++j) {
+				for (int k = 0; k < 3; ++k) {
+					vectors[j][k] = vertices[indices[closestFaceIndex * 3 + j] * verticesRowAmount + k];
+				}
+			}
+			float distances[3];
+			distances[0] = pointToEdgeDistance(intersectionPoint, vectors[0], vectors[1]);
+			distances[1] = pointToEdgeDistance(intersectionPoint, vectors[1], vectors[2]);
+			distances[2] = pointToEdgeDistance(intersectionPoint, vectors[2], vectors[0]);
+			float minDistance = std::numeric_limits<float>::max();
+			int minIndex = -1;
+			for (int i = 0; i < 3; ++i) {
+				if (distances[i] < minDistance) {
+					minDistance = distances[i];
+					minIndex = i;
+				}
+			}
+			int index1 = indices[closestFaceIndex * 3 + minIndex];
+			int index2 = indices[closestFaceIndex * 3 + (minIndex + 1) % 3];
+			highlightedEdges.push_back(Edge(index1, index2));
+			updateEdges();
+		}
+		int index = find(highlightedFaces, closestFaceIndex);
+		if (index != -1) highlightedFaces.erase(highlightedFaces.begin() + index);
+		else if (closestFaceIndex != -1) highlightedFaces.push_back(closestFaceIndex);
+		else highlightedFaces.clear();
 	}
 	else if (button == GLFW_MOUSE_BUTTON_MIDDLE && action == GLFW_PRESS) {
 		moving = !moving;
@@ -209,7 +290,6 @@ glm::vec3 mapMouseMovementToDirection(double deltaX, double deltaY) {
 
 	return cameraRight * ((float)deltaX*sensitivity) + cameraUp * ((float)deltaY*sensitivity);
 }
-
 void cursor_position_callback(GLFWwindow* window, double xpos, double ypos) {
 	if (firstMouse) {
 		lastX = xpos;
@@ -225,11 +305,11 @@ void cursor_position_callback(GLFWwindow* window, double xpos, double ypos) {
 	if (moving) {
 		glm::vec3 direction = mapMouseMovementToDirection(deltaX, deltaY);
 		std::vector<int> scaled;
-		for (int i = 0; i < highlighted.size(); i++) {
+		for (int i = 0; i < highlightedFaces.size(); i++) {
 			for (int j = 0; j < 3; j++) {
 				for (int k = 0; k < 3; k++) {
 					// i for highlighted triangle, j for vertex of that triangle, k for x/y/z
-					int index = indices[highlighted[i] * 3 + j] * verticesRowAmount + k;
+					int index = indices[highlightedFaces[i] * 3 + j] * verticesRowAmount + k;
 					if (find(scaled, index) == -1) {
 						vertices[index] += direction[k];
 						scaled.push_back(index);
