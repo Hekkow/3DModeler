@@ -1,4 +1,3 @@
-
 #include <iostream>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
@@ -73,6 +72,7 @@ std::vector<int> highlightedFaces;
 std::vector<Edge> highlightedEdges;
 std::vector<GLuint> highlightedEdgeIndices;
 std::vector<GLuint> nonhighlightedEdgeIndices;
+std::vector<int> toMove;
 
 bool moving = false;
 double lastX = 0.0, lastY = 0.0;
@@ -90,6 +90,12 @@ void Binds() {
 	EBO1.Unbind();
 }
 int find(std::vector<int> v, int finding) {
+	for (int i = 0; i < v.size(); i++) {
+		if (v[i] == finding) return i;
+	}
+	return -1;
+}
+int find(std::vector<Edge> v, Edge finding) {
 	for (int i = 0; i < v.size(); i++) {
 		if (v[i] == finding) return i;
 	}
@@ -199,6 +205,21 @@ void updateEdges() {
 	}
 }
 
+void updateSelectedVertices() {
+	toMove.clear();
+	for (int i = 0; i < highlightedFaces.size(); i++) {
+		for (int j = 0; j < 3; j++) {
+			int index = indices[highlightedFaces[i] * 3 + j];
+			if (find(toMove, index) == -1) toMove.push_back(index);
+		}
+	}
+	for (int i = 0; i < highlightedEdgeIndices.size(); i += 2) {
+		for (int j = 0; j < 2; j++) {
+			int index = highlightedEdgeIndices[i + j];
+			if (find(toMove, index) == -1) toMove.push_back(index);
+		}
+	}
+}
 
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods) {
 	if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
@@ -215,15 +236,21 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 		if (SegmentDetection::getClickedTriangle(rayOrigin, rayWorld, indices, vertices, verticesRowAmount, closestFaceIndex, intersectionPoint) && currentMode == EDGE) {
 			int index1, index2;
 			SegmentDetection::getClosestEdge(intersectionPoint, indices, vertices, verticesRowAmount, closestFaceIndex, index1, index2);
-			highlightedEdges.push_back(Edge(index1, index2));
-			updateEdges();
+			Edge edge(index1, index2);
+			int index = find(highlightedEdges, edge);
+			if (index != -1) highlightedEdges.erase(highlightedEdges.begin() + index);
+			else if (closestFaceIndex != -1) highlightedEdges.push_back(edge);
+			else highlightedEdges.clear();
 		}
+		
 		if (currentMode == FACE) {
 			int index = find(highlightedFaces, closestFaceIndex);
 			if (index != -1) highlightedFaces.erase(highlightedFaces.begin() + index);
 			else if (closestFaceIndex != -1) highlightedFaces.push_back(closestFaceIndex);
 			else highlightedFaces.clear();
 		}
+		updateEdges();
+		updateSelectedVertices();
 		
 	}
 	else if (button == GLFW_MOUSE_BUTTON_MIDDLE && action == GLFW_PRESS) {
@@ -239,6 +266,7 @@ glm::vec3 mapMouseMovementToDirection(double deltaX, double deltaY) {
 
 	return cameraRight * ((float)deltaX*sensitivity) + cameraUp * ((float)deltaY*sensitivity);
 }
+
 void cursor_position_callback(GLFWwindow* window, double xpos, double ypos) {
 	if (firstMouse) {
 		lastX = xpos;
@@ -253,17 +281,10 @@ void cursor_position_callback(GLFWwindow* window, double xpos, double ypos) {
 
 	if (moving) {
 		glm::vec3 direction = mapMouseMovementToDirection(deltaX, deltaY);
-		std::vector<int> scaled;
-		for (int i = 0; i < highlightedFaces.size(); i++) {
+		
+		for (int i = 0; i < toMove.size(); i++) {
 			for (int j = 0; j < 3; j++) {
-				for (int k = 0; k < 3; k++) {
-					// i for highlighted triangle, j for vertex of that triangle, k for x/y/z
-					int index = indices[highlightedFaces[i] * 3 + j] * verticesRowAmount + k;
-					if (find(scaled, index) == -1) {
-						vertices[index] += direction[k];
-						scaled.push_back(index);
-					}
-				}
+				vertices[toMove[i] * verticesRowAmount + j] += direction[j];
 			}
 		}
 		VBO1.UpdateData(&vertices[0], vertices.size() * sizeof(float));
