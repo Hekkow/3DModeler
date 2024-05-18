@@ -9,15 +9,22 @@ uniform bool isEdge;
 uniform bool highlighted;
 void main()
 {
-	if (highlighted) {
-		FragColor = vec4(1, 0, 0, 1);
-	}
-	else if (isEdge) {
-		FragColor = vec4(0, 0, 1, 1);
+	if (isEdge) {
+		if (highlighted) {
+			FragColor = vec4(1, 0, 0, 1);
+		}
+		else {
+			FragColor = vec4(0, 0, 1, 1);
+		}
 	}
 	else {
-		//FragColor = vec4(0, 0, 1, 1);
-		FragColor = texture(tex0, texCoord);
+		if (highlighted) {
+			FragColor = vec4(1, 0, 0, 1);
+		}
+		else {
+			//FragColor = vec4(0, 0, 1, 1);
+			FragColor = texture(tex0, texCoord);
+		}
 	}
    
 }
