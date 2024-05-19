@@ -6,6 +6,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <stb/stb_image.h>
+#include <map>
 
 #include "shaderClass.h"
 #include "VBO.h"
@@ -21,8 +22,7 @@ const char* windowName = "3D Modeler";
 int verticesRowAmount = 5;
 
 // vertices, first three are vertex coordinates then last two are texture coordinates
-std::vector<GLfloat> vertices =
-{
+std::vector<GLfloat> vertices = {
 	-0.5f, -0.5f, -0.5f, 0, 0, // back left down
 	-0.5f, 0.5f, -0.5f, 0, 1, // back left up
 	0.5f, 0.5f, -0.5f, 1, 1, // back right up
@@ -31,7 +31,7 @@ std::vector<GLfloat> vertices =
 	-0.5f, 0.5f, 0.5f, 1, 1, // front left up
 	0.5f, 0.5f, 0.5f, 0, 1, // front right up
 	0.5f, -0.5f, 0.5f, 0, 0, // front right down
-	
+
 };
 std::vector<GLuint> indices = {
 	0, 2, 1,
@@ -51,16 +51,21 @@ enum Mode {
 	FACE = 1,
 	EDGE = 2,
 };
+enum Action {
+	TRANSLATION = 1,
+	EXTRUSION = 2
+};
 Mode currentMode = FACE;
+Action currentAction = EXTRUSION;
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
 void cursor_position_callback(GLFWwindow* window, double xpos, double ypos);
 void updateEdges();
 Camera camera;
-class Edge{
+class Edge {
 public:
 	int index1;
 	int index2;
-	Edge(int i1, int i2) { 
+	Edge(int i1, int i2) {
 		index1 = i1;
 		index2 = i2;
 	}
@@ -78,6 +83,9 @@ bool moving = false;
 double lastX = 0.0, lastY = 0.0;
 bool firstMouse = true;
 
+// action specific
+bool extrusionVerticesCreated = false;
+
 void Binds() {
 	VAO1.Init();
 	VAO1.Bind();
@@ -89,27 +97,22 @@ void Binds() {
 	VBO1.Unbind();
 	EBO1.Unbind();
 }
-int find(std::vector<int> v, int finding) {
+template <typename T>
+int find(std::vector<T> v, T finding) {
 	for (int i = 0; i < v.size(); i++) {
 		if (v[i] == finding) return i;
 	}
 	return -1;
 }
-int find(std::vector<Edge> v, Edge finding) {
-	for (int i = 0; i < v.size(); i++) {
-		if (v[i] == finding) return i;
-	}
-	return -1;
-}
-int main() 
+int main()
 {
 	glfwInit();
-	
+
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE); 
+	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-	
+
 
 	GLFWwindow* window = glfwCreateWindow(windowWidth, windowHeight, windowName, NULL, NULL);
 	if (window == NULL) {
@@ -124,7 +127,7 @@ int main()
 
 	Shader shaderProgram("default.vert", "default.frag");
 	Binds();
-	
+
 	Texture popCat("popcat.jpg", GL_TEXTURE_2D, GL_TEXTURE0, GL_RGB, GL_UNSIGNED_BYTE);
 	popCat.texUnit(shaderProgram, "tex0", 0);
 	glEnable(GL_DEPTH_TEST);
@@ -135,14 +138,15 @@ int main()
 	GLuint highlightedLinesEBO, nonhighlightedLinesEBO;
 	glGenBuffers(1, &highlightedLinesEBO);
 	glGenBuffers(1, &nonhighlightedLinesEBO);
+
 	while (!glfwWindowShouldClose(window)) {
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		glClearColor(0.07f, 0.13f, 0.17f, 1);
-		
+
 		shaderProgram.Activate();
 		popCat.Bind();
-		
-		
+
+
 		camera.Inputs(window);
 		camera.Matrix(45, 0.1f, 100, shaderProgram, "camMatrix");
 
@@ -228,7 +232,7 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 
 		glm::vec3 rayOrigin = camera.Position;
 		glm::vec3 rayWorld = SegmentDetection::getRayWorld(xpos, ypos, rayOrigin, windowWidth, windowHeight, camera);
-		
+
 
 		int closestFaceIndex;
 		glm::vec3 intersectionPoint;
@@ -242,16 +246,18 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 			else if (closestFaceIndex != -1) highlightedEdges.push_back(edge);
 			else highlightedEdges.clear();
 		}
-		
+
 		if (currentMode == FACE) {
 			int index = find(highlightedFaces, closestFaceIndex);
-			if (index != -1) highlightedFaces.erase(highlightedFaces.begin() + index);
+			if (index != -1) {
+				highlightedFaces.erase(highlightedFaces.begin() + index);
+			}
 			else if (closestFaceIndex != -1) highlightedFaces.push_back(closestFaceIndex);
 			else highlightedFaces.clear();
 		}
 		updateEdges();
 		updateSelectedVertices();
-		
+
 	}
 	else if (button == GLFW_MOUSE_BUTTON_MIDDLE && action == GLFW_PRESS) {
 		moving = !moving;
@@ -264,7 +270,7 @@ glm::vec3 mapMouseMovementToDirection(double deltaX, double deltaY) {
 
 	float sensitivity = 0.01f;
 
-	return cameraRight * ((float)deltaX*sensitivity) + cameraUp * ((float)deltaY*sensitivity);
+	return cameraRight * ((float)deltaX * sensitivity) + cameraUp * ((float)deltaY * sensitivity);
 }
 
 void cursor_position_callback(GLFWwindow* window, double xpos, double ypos) {
@@ -281,15 +287,42 @@ void cursor_position_callback(GLFWwindow* window, double xpos, double ypos) {
 
 	if (moving) {
 		glm::vec3 direction = mapMouseMovementToDirection(deltaX, deltaY);
-		
-		for (int i = 0; i < toMove.size(); i++) {
-			for (int j = 0; j < 3; j++) {
-				vertices[toMove[i] * verticesRowAmount + j] += direction[j];
+		if (currentAction == TRANSLATION) {
+			for (int i = 0; i < toMove.size(); i++) {
+				for (int j = 0; j < 3; j++) {
+					vertices[toMove[i] * verticesRowAmount + j] += direction[j];
+				}
 			}
 		}
+		else if (currentAction == EXTRUSION) {
+			if (!extrusionVerticesCreated) {
+				int originalHighlightedFacesSize = highlightedFaces.size();
+				std::map<int, int> addedIndicesMap;
+				for (int i = 0; i < originalHighlightedFacesSize; i++) {
+					for (int j = 0; j < 3; j++) {
+						int index = indices[highlightedFaces[i] * 3 + j];
+						if (addedIndicesMap.find(index) == addedIndicesMap.end()) {
+							for (int k = 0; k < verticesRowAmount; k++) {
+								vertices.push_back(vertices[index * verticesRowAmount + k]);
+							}
+							addedIndicesMap[index] = vertices.size() / verticesRowAmount - 1;
+						}
+						indices.push_back(addedIndicesMap[index]);
+					}
+				}
+				std::vector<int> originalHighlightedFaces(highlightedFaces);
+				highlightedFaces.clear();
+				for (int i = 1; i <= originalHighlightedFacesSize; i++) {
+					std::cout << indices.size() / 3 - i << std::endl;
+					highlightedFaces.push_back(indices.size() / 3 - i);
+				}
+				updateSelectedVertices();
+				currentAction = TRANSLATION;
+				extrusionVerticesCreated = true;
+			}
+		}
+
 		VBO1.UpdateData(&vertices[0], vertices.size() * sizeof(float));
 		Binds();
 	}
 }
-
-

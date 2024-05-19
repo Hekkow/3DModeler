@@ -1,25 +1,33 @@
 ﻿  Main.cpp
-C:\!Mine\Code\3DModeler\Main.cpp(114,53): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-C:\!Mine\Code\3DModeler\Main.cpp(114,40): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-C:\!Mine\Code\3DModeler\Main.cpp(123,32): warning C4244: 'argument': conversion from 'float' to 'GLsizei', possible loss of data
-C:\!Mine\Code\3DModeler\Main.cpp(123,19): warning C4244: 'argument': conversion from 'float' to 'GLsizei', possible loss of data
-C:\!Mine\Code\3DModeler\Main.cpp(131,31): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-C:\!Mine\Code\3DModeler\Main.cpp(131,18): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-C:\!Mine\Code\3DModeler\Main.cpp(164,58): warning C4267: 'argument': conversion from 'size_t' to 'GLsizei', possible loss of data
-C:\!Mine\Code\3DModeler\Main.cpp(172,55): warning C4267: 'argument': conversion from 'size_t' to 'GLsizei', possible loss of data
-C:\!Mine\Code\3DModeler\Main.cpp(193,37): warning C4838: conversion from '_Ty' to 'int' requires a narrowing conversion
-C:\!Mine\Code\3DModeler\Main.cpp(193,37): warning C4838:         with
-C:\!Mine\Code\3DModeler\Main.cpp(193,37): warning C4838:         [
-C:\!Mine\Code\3DModeler\Main.cpp(193,37): warning C4838:             _Ty=GLuint
-C:\!Mine\Code\3DModeler\Main.cpp(193,37): warning C4838:         ]
-C:\!Mine\Code\3DModeler\Main.cpp(193,53): warning C4838: conversion from '_Ty' to 'int' requires a narrowing conversion
-C:\!Mine\Code\3DModeler\Main.cpp(193,53): warning C4838:         with
-C:\!Mine\Code\3DModeler\Main.cpp(193,53): warning C4838:         [
-C:\!Mine\Code\3DModeler\Main.cpp(193,53): warning C4838:             _Ty=GLuint
-C:\!Mine\Code\3DModeler\Main.cpp(193,53): warning C4838:         ]
-C:\!Mine\Code\3DModeler\Main.cpp(193,69): warning C4838: conversion from '_Ty' to 'int' requires a narrowing conversion
-C:\!Mine\Code\3DModeler\Main.cpp(193,69): warning C4838:         with
-C:\!Mine\Code\3DModeler\Main.cpp(193,69): warning C4838:         [
-C:\!Mine\Code\3DModeler\Main.cpp(193,69): warning C4838:             _Ty=GLuint
-C:\!Mine\Code\3DModeler\Main.cpp(193,69): warning C4838:         ]
+C:\!Mine\Code\3DModeler\Main.cpp(117,53): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
+C:\!Mine\Code\3DModeler\Main.cpp(117,40): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
+C:\!Mine\Code\3DModeler\Main.cpp(126,32): warning C4244: 'argument': conversion from 'float' to 'GLsizei', possible loss of data
+C:\!Mine\Code\3DModeler\Main.cpp(126,19): warning C4244: 'argument': conversion from 'float' to 'GLsizei', possible loss of data
+C:\!Mine\Code\3DModeler\Main.cpp(134,31): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
+C:\!Mine\Code\3DModeler\Main.cpp(134,18): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
+C:\!Mine\Code\3DModeler\Main.cpp(168,58): warning C4267: 'argument': conversion from 'size_t' to 'GLsizei', possible loss of data
+C:\!Mine\Code\3DModeler\Main.cpp(176,55): warning C4267: 'argument': conversion from 'size_t' to 'GLsizei', possible loss of data
+C:\!Mine\Code\3DModeler\Main.cpp(197,37): warning C4838: conversion from '_Ty' to 'int' requires a narrowing conversion
+C:\!Mine\Code\3DModeler\Main.cpp(197,37): warning C4838:         with
+C:\!Mine\Code\3DModeler\Main.cpp(197,37): warning C4838:         [
+C:\!Mine\Code\3DModeler\Main.cpp(197,37): warning C4838:             _Ty=GLuint
+C:\!Mine\Code\3DModeler\Main.cpp(197,37): warning C4838:         ]
+C:\!Mine\Code\3DModeler\Main.cpp(197,53): warning C4838: conversion from '_Ty' to 'int' requires a narrowing conversion
+C:\!Mine\Code\3DModeler\Main.cpp(197,53): warning C4838:         with
+C:\!Mine\Code\3DModeler\Main.cpp(197,53): warning C4838:         [
+C:\!Mine\Code\3DModeler\Main.cpp(197,53): warning C4838:             _Ty=GLuint
+C:\!Mine\Code\3DModeler\Main.cpp(197,53): warning C4838:         ]
+C:\!Mine\Code\3DModeler\Main.cpp(197,69): warning C4838: conversion from '_Ty' to 'int' requires a narrowing conversion
+C:\!Mine\Code\3DModeler\Main.cpp(197,69): warning C4838:         with
+C:\!Mine\Code\3DModeler\Main.cpp(197,69): warning C4838:         [
+C:\!Mine\Code\3DModeler\Main.cpp(197,69): warning C4838:             _Ty=GLuint
+C:\!Mine\Code\3DModeler\Main.cpp(197,69): warning C4838:         ]
+C:\!Mine\Code\3DModeler\Main.cpp(299,38): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+C:\!Mine\Code\3DModeler\Main.cpp(308,69): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+C:\!Mine\Code\3DModeler\Main.cpp(317,52): warning C4267: 'argument': conversion from 'size_t' to '_Ty', possible loss of data
+C:\!Mine\Code\3DModeler\Main.cpp(317,52): warning C4267:         with
+C:\!Mine\Code\3DModeler\Main.cpp(317,52): warning C4267:         [
+C:\!Mine\Code\3DModeler\Main.cpp(317,52): warning C4267:             _Ty=int
+C:\!Mine\Code\3DModeler\Main.cpp(317,52): warning C4267:         ]
+  LINK : C:\!Mine\Code\3DModeler\x64\Debug\3DModeler.exe not found or not built by the last incremental link; performing full link
   3DModeler.vcxproj -> C:\!Mine\Code\3DModeler\x64\Debug\3DModeler.exe
